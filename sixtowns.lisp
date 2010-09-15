@@ -1,5 +1,3 @@
-(cl:defpackage :sixtowns
-  (:use :cl :anaphora :metabang.utilities))
 (cl:in-package :sixtowns)
 
 (defvar *connection* nil)
