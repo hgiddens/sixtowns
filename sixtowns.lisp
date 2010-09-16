@@ -18,3 +18,8 @@
   "Retrieves a list of atom entries."
   (let ((feed (babel:octets-to-string (cl-oauth:access-protected-resource *entry-uri* *access-token*))))
     (dom:get-elements-by-tag-name (cxml:parse feed (cxml-dom:make-dom-builder)) "entry")))
+
+(defun entry-id (entry)
+  (let ((full-id (xpath:with-namespaces (("atom" "http://www.w3.org/2005/Atom"))
+                   (xpath:string-value (xpath:evaluate "atom:id" entry)))))
+    (cl-containers:last-item (split-sequence:split-sequence #\/ full-id))))
