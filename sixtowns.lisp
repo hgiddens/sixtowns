@@ -11,3 +11,10 @@
   (assert (not (null *connection*)))
   (xmpp:disconnect *connection*)
   (nilf *connection*))
+
+(defparameter *entry-uri* "http://api.twitter.com/1/statuses/friends_timeline.atom")
+
+(defun get-entries ()
+  "Retrieves a list of atom entries."
+  (let ((feed (babel:octets-to-string (cl-oauth:access-protected-resource *entry-uri* *access-token*))))
+    (dom:get-elements-by-tag-name (cxml:parse feed (cxml-dom:make-dom-builder)) "entry")))
