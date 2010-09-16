@@ -14,6 +14,11 @@
 
 (defparameter *entry-uri* "http://api.twitter.com/1/statuses/friends_timeline.atom")
 
+(defun entry-url (&key since)
+  (if since
+      (format nil "~A?since_id=~A" *entry-uri* since)
+      *entry-uri*))
+
 (defun get-entries ()
   "Retrieves a list of atom entries."
   (let ((feed (babel:octets-to-string (cl-oauth:access-protected-resource *entry-uri* *access-token*))))
