@@ -23,3 +23,6 @@
   (let ((full-id (xpath:with-namespaces (("atom" "http://www.w3.org/2005/Atom"))
                    (xpath:string-value (xpath:evaluate "atom:id" entry)))))
     (cl-containers:last-item (split-sequence:split-sequence #\/ full-id))))
+
+(defun most-recent (entries)
+  (elt entries 0))
