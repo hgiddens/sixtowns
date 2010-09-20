@@ -35,3 +35,29 @@
 
 (defun most-recent (entries)
   (elt entries 0))
+
+;;; SCRATCH
+
+(defun title-for-entry (entry)
+  (elt (loop for title across (dom:get-elements-by-tag-name entry "title")
+             nconc (loop for child across (dom:child-nodes title)
+                         when (eq (type-of child) 'rune-dom::text)
+                         collect (dom:data child))) 0))
+
+(defun get-and-print-tweets ()
+  (loop for entry across (get-entries) do (format t "~A~%" (title-for-entry entry))))
+
+(defun get-and-send-tweets ()
+  (loop for entry across (get-entries) do
+        (xmpp:message *connection* *client-jid* (title-for-entry entry))))
+
+(defparameter *check-interval* 60)
+
+(defvar *finish-loop* nil)
+
+(defun run-loop ()
+  (bt:make-thread (lambda ()
+                    (loop until *finish-loop* do
+                          (get-and-print-tweets)
+                          (handler-case (sleep *check-interval*)
+                            (t () (tf *finish-loop*)))))))
