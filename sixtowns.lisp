@@ -1,6 +1,18 @@
 (cl:in-package :sixtowns)
 
+;;; Additional parameters to define:
+;;;  *xmpp-host*
+;;;  *xmpp-user*
+;;;  *xmpp-pass*
+;;;  *xmpp-resource*
+;;;  *client-jid*
+;;;  *access-token*
+
 (defvar *connection* nil)
+(defparameter *check-interval* 60)
+(defvar *most-recent-seen* nil)
+(defvar *client-available* nil)
+(defparameter *entry-uri* "http://api.twitter.com/1/statuses/friends_timeline.atom")
 
 (defun connect ()
   (assert (null *connection*))
@@ -12,14 +24,10 @@
   (xmpp:disconnect *connection*)
   (nilf *connection*))
 
-(defparameter *entry-uri* "http://api.twitter.com/1/statuses/friends_timeline.atom")
-
 (defun entry-url (&key since)
   (if since
       (format nil "~A?since_id=~A" *entry-uri* since)
       *entry-uri*))
-
-(defvar *most-recent-seen* nil)
 
 (defun get-entries ()
   "Retrieves a list of atom entries."
@@ -36,19 +44,13 @@
 (defun most-recent (entries)
   (elt entries 0))
 
-(defvar *client-available*)
-
 (defun available-presence-p (presence)
   (with-slots ((show xmpp::show) (type xmpp::type-)) presence
     (and (not show) (not type))))
 
 (defmethod xmpp:handle ((connection xmpp:connection) (presence xmpp:presence))
   (when (equal (xmpp::from presence) *client-jid*)
-    (let ((available? (available-presence-p presence)))
-      (format *error-output* "~&Client is ~:[not ~;~]available~%" available?)
-      (setf *client-available* available?))))
-
-(defparameter *check-interval* 60)
+    (setf *client-available* (available-presence-p presence))))
 
 (defun start ()
   (setf *client-available* nil)
@@ -59,34 +61,13 @@
                           (sleep *check-interval*))))
   (xmpp:receive-stanza-loop *connection*))
 
-(defun send-tweets ()
-  (format *error-output* "~&send-tweets: ~%")
-  (when *client-available*
-    (loop for entry across (get-entries) do
-          (let ((title (title-for-entry entry)))
-            (format *error-output* "~&sending: ~A~%" title)
-            (xmpp:message *connection* *client-jid* title)))))
-
-;;; SCRATCH
-
 (defun title-for-entry (entry)
   (elt (loop for title across (dom:get-elements-by-tag-name entry "title")
              nconc (loop for child across (dom:child-nodes title)
                          when (eq (type-of child) 'rune-dom::text)
                          collect (dom:data child))) 0))
 
-(defun get-and-print-tweets ()
-  (loop for entry across (get-entries) do (format t "~A~%" (title-for-entry entry))))
-
-(defun get-and-send-tweets ()
-  (loop for entry across (get-entries) do
-        (xmpp:message *connection* *client-jid* (title-for-entry entry))))
-
-(defvar *finish-loop* nil)
-
-(defun run-loop ()
-  (bt:make-thread (lambda ()
-                    (loop until *finish-loop* do
-                          (get-and-print-tweets)
-                          (handler-case (sleep *check-interval*)
-                            (t () (tf *finish-loop*)))))))
+(defun send-tweets ()
+  (when *client-available*
+    (loop for entry across (get-entries) do
+          (xmpp:message *connection* *client-jid* (title-for-entry entry)))))
