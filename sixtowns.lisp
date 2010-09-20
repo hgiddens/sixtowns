@@ -30,11 +30,11 @@
       *entry-uri*))
 
 (defun get-entries ()
-  "Retrieves a list of atom entries."
+  "Retrieves a list of atom entries, oldest first."
   (let ((feed (babel:octets-to-string (cl-oauth:access-protected-resource (entry-url :since *most-recent-seen*) *access-token*))))
-    (aprog1 (dom:get-elements-by-tag-name (cxml:parse feed (cxml-dom:make-dom-builder)) "entry")
-      (unless (cl-containers:empty-p it)
-        (setf *most-recent-seen* (entry-id (most-recent it)))))))
+    (reverse (aprog1 (dom:get-elements-by-tag-name (cxml:parse feed (cxml-dom:make-dom-builder)) "entry")
+               (unless (cl-containers:empty-p it)
+                 (setf *most-recent-seen* (entry-id (most-recent it))))))))
 
 (defun entry-id (entry)
   (let ((full-id (xpath:with-namespaces (("atom" "http://www.w3.org/2005/Atom"))
