@@ -6,5 +6,5 @@ ccl -e '(require :asdf)' \
     -e '(load "package.lisp")' \
     -e '(load "secret.lisp")' \
     -e '(load "sixtowns.lisp")' \
-    -e '(sixtowns::run-loop)'
+    -e '(sixtowns::start)'
 

@@ -48,10 +48,24 @@
       (format *error-output* "~&Client is ~:[not ~;~]available~%" available?)
       (setf *client-available* available?))))
 
+(defparameter *check-interval* 60)
+
 (defun start ()
   (setf *client-available* nil)
   (connect)
+  (bt:make-thread (lambda ()
+                    (loop until (not *connection*) do
+                          (send-tweets)
+                          (sleep *check-interval*))))
   (xmpp:receive-stanza-loop *connection*))
+
+(defun send-tweets ()
+  (format *error-output* "~&send-tweets: ~%")
+  (when *client-available*
+    (loop for entry across (get-entries) do
+          (let ((title (title-for-entry entry)))
+            (format *error-output* "~&sending: ~A~%" title)
+            (xmpp:message *connection* *client-jid* title)))))
 
 ;;; SCRATCH
 
@@ -67,8 +81,6 @@
 (defun get-and-send-tweets ()
   (loop for entry across (get-entries) do
         (xmpp:message *connection* *client-jid* (title-for-entry entry))))
-
-(defparameter *check-interval* 60)
 
 (defvar *finish-loop* nil)
 
