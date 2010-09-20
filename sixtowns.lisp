@@ -36,6 +36,23 @@
 (defun most-recent (entries)
   (elt entries 0))
 
+(defvar *client-available*)
+
+(defun available-presence-p (presence)
+  (with-slots ((show xmpp::show) (type xmpp::type-)) presence
+    (and (not show) (not type))))
+
+(defmethod xmpp:handle ((connection xmpp:connection) (presence xmpp:presence))
+  (when (equal (xmpp::from presence) *client-jid*)
+    (let ((available? (available-presence-p presence)))
+      (format *error-output* "~&Client is ~:[not ~;~]available~%" available?)
+      (setf *client-available* available?))))
+
+(defun start ()
+  (setf *client-available* nil)
+  (connect)
+  (xmpp:receive-stanza-loop *connection*))
+
 ;;; SCRATCH
 
 (defun title-for-entry (entry)
