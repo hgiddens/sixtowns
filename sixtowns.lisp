@@ -1,12 +1,12 @@
 (cl:in-package :sixtowns)
 
 ;;; Additional parameters to define:
-;;;  *xmpp-host*
-;;;  *xmpp-user*
-;;;  *xmpp-pass*
-;;;  *xmpp-resource*
-;;;  *client-jid*
-;;;  *access-token*
+;;;  *xmpp-host* : "example.org"
+;;;  *xmpp-user* : "username"
+;;;  *xmpp-pass* : "p4ssw0rd"
+;;;  *xmpp-resource* : "sixtowns"
+;;;  *client-jid* : "foo@bar/baz"; it is assumed presence subscriptions already exist
+;;;  *access-token* : an instance of cl-oauth:access-token
 
 (defvar *connection* nil)
 (defparameter *check-interval* 60)
